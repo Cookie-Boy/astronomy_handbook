@@ -12,6 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibsutis.astronomyhandbook.R
+import com.sibsutis.astronomyhandbook.model.News
 import com.sibsutis.astronomyhandbook.viewmodel.NewsViewModel
 
 @Composable
@@ -19,11 +20,6 @@ fun NewsScreen(
     viewModel: NewsViewModel = viewModel()
 ) {
     val displayedNews by viewModel.displayedNews.collectAsState()
-
-    // Для отладки
-    LaunchedEffect(displayedNews) {
-        println("NewsScreen: Displayed ${displayedNews.size} news")
-    }
 
     if (displayedNews.isEmpty()) {
         Box(
@@ -54,13 +50,13 @@ fun NewsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsItem(
-    news: com.sibsutis.astronomyhandbook.model.News,
+    news: News,
     onLikeClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp), // Фиксированная высота для всех карточек
+            .height(200.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
