@@ -8,6 +8,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.sibsutis.astronomyhandbook.opengl.MyGLRenderer
+import com.sibsutis.astronomyhandbook.opengl.PlanetGLRenderer
 
 @Composable
 fun OpenGLScreen() {
@@ -16,7 +17,7 @@ fun OpenGLScreen() {
         factory = { ctx ->
             GLSurfaceView(ctx).apply {
                 setEGLContextClientVersion(1)
-                setRenderer(MyGLRenderer(context))
+                setRenderer(PlanetGLRenderer(context))
                 renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
             }
         },

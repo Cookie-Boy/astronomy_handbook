@@ -46,13 +46,14 @@ class MyGLRenderer(private val context: Context) : android.opengl.GLSurfaceView.
     override fun onDrawFrame(gl: GL10) {
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT or GL10.GL_DEPTH_BUFFER_BIT)
 
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, textureCube)
+        gl.glBindTexture(GL10.GL_TEXTURE_2D, textureBackground)
         gl.glMatrixMode(GL10.GL_MODELVIEW)
         gl.glLoadIdentity()
         gl.glTranslatef(0f, 0f, -20f)   // назад на 20
         gl.glScalef(15f, 15f, 1f)
         square.draw(gl)
 
+        gl.glBindTexture(GL10.GL_TEXTURE_2D, textureCube)
         gl.glLoadIdentity()
         gl.glTranslatef(0f, 0f, -6f)     // чуть ближе, чем фон
         gl.glRotatef(cubeRotation, 1f, 1f, 0f)  // вращение
