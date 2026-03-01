@@ -17,6 +17,9 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private lateinit var sphere: Sphere
     private var textureBackground = -1
 
+    private lateinit var selectionCube: TransparentCube
+    private var selectedPlanetIndex = 0
+
     private data class Planet(
         val name: String,
         val radius: Float,
@@ -39,12 +42,18 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private val moonSpeed = 0.05f
     private val moonOrbitRadius = 0.6f
 
+    fun setSelectedPlanetIndex(index: Int) {
+        selectedPlanetIndex = index
+    }
+
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
         Log.d("MyGLRenderer", "onSurfaceCreated")
         square = Square()
         sphere = Sphere(1.0f)
+        selectionCube = TransparentCube()
 
         textureBackground = loadTexture(gl, R.drawable.galaxy_background)
+
 
         // Настройки OpenGL
         gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -104,8 +113,12 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         val noEmission = floatArrayOf(0f, 0f, 0f, 1f)
         gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_EMISSION, noEmission, 0)
 
+        var selectedX = 0f
+        var selectedY = 0f
+        var selectedRadius = 0f
+
         // Планеты
-        for (planet in planets) {
+        for ((index, planet) in planets.withIndex()) {
             planet.angle += planet.speed
             val x = planet.orbitRadius * cos(planet.angle)
             val y = planet.orbitRadius * sin(planet.angle)
@@ -127,6 +140,34 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
                 sphere.draw(gl)
                 gl.glPopMatrix()
             }
+
+            if (index == selectedPlanetIndex) {
+                selectedX = x
+                selectedY = y
+                selectedRadius = planet.radius
+            }
+        }
+
+        if (selectedPlanetIndex in planets.indices) {
+            gl.glDisable(GL10.GL_LIGHTING)
+            gl.glEnable(GL10.GL_BLEND)
+            gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA)
+            gl.glDisable(GL10.GL_TEXTURE_2D)
+
+            gl.glColor4f(1f, 1f, 1f, 0.3f)  // белый полупрозрачный
+
+            gl.glPushMatrix()
+            gl.glLoadIdentity()
+            gl.glTranslatef(0f, 0f, -6f)       // центр системы
+            gl.glTranslatef(selectedX, selectedY, 0f) // позиция планеты
+            // Масштабируем куб так, чтобы он был чуть больше планеты
+            gl.glScalef(selectedRadius * 1.2f, selectedRadius * 1.2f, selectedRadius * 1.2f)
+            selectionCube.draw(gl)
+            gl.glPopMatrix()
+
+            gl.glEnable(GL10.GL_LIGHTING)
+            gl.glDisable(GL10.GL_BLEND)
+            gl.glEnable(GL10.GL_TEXTURE_2D)
         }
     }
 

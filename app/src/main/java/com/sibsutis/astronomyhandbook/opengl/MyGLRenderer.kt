@@ -55,8 +55,8 @@ class MyGLRenderer(private val context: Context) : android.opengl.GLSurfaceView.
 
         gl.glBindTexture(GL10.GL_TEXTURE_2D, textureCube)
         gl.glLoadIdentity()
-        gl.glTranslatef(0f, 0f, -6f)     // чуть ближе, чем фон
-        gl.glRotatef(cubeRotation, 1f, 1f, 0f)  // вращение
+        gl.glTranslatef(0f, 0f, -6f)
+        gl.glRotatef(cubeRotation, 1f, 1f, 0f)
         cube.draw(gl)
 
         cubeRotation += 1.2f

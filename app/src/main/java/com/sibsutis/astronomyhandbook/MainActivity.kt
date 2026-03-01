@@ -1,11 +1,13 @@
 package com.sibsutis.astronomyhandbook
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.res.painterResource
@@ -29,6 +31,8 @@ class MainActivity : ComponentActivity() {
                     val viewModel: NewsViewModel = viewModel()
 
                     var showOpenGL by remember { mutableStateOf(false) }
+                    val planetNames = listOf("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn")
+                    var selectedPlanetIndex by remember { mutableStateOf(0) }
 
                     if (!showOpenGL) {
                         Column(
@@ -53,30 +57,56 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     } else {
-                        Column(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            TopAppBar(
-                                title = { Text("Вернуться к новостям") },
-                                navigationIcon = {
-                                    IconButton(onClick = { showOpenGL = false }) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.left_arrow_icon),
-                                            contentDescription = "Назад",
-                                            modifier = Modifier.size(30.dp)
-                                        )
-                                    }
-                                },
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            )
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            OpenGLScreen(selectedPlanetIndex = selectedPlanetIndex)
 
-                            Box(
-                                modifier = Modifier.weight(1f).clipToBounds()
+                            // Нижняя панель с кнопками
+                            Row(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                OpenGLScreen()
+                                Button(
+                                    onClick = {
+                                        selectedPlanetIndex = (selectedPlanetIndex - 1 + planetNames.size) % planetNames.size
+                                    }
+                                ) {
+                                    Text("←")
+                                }
+                                Button(
+                                    onClick = {
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "Выбрана планета: ${planetNames[selectedPlanetIndex]}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                ) {
+                                    Text("i")
+                                }
+                                Button(
+                                    onClick = {
+                                        selectedPlanetIndex = (selectedPlanetIndex + 1) % planetNames.size
+                                    }
+                                ) {
+                                    Text("→")
+                                }
+                            }
+
+                            // Кнопка "Назад" в верхнем левом углу
+                            IconButton(
+                                onClick = { showOpenGL = false },
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.left_arrow_icon),
+                                    contentDescription = "Назад",
+                                    modifier = Modifier.size(30.dp)
+                                )
                             }
                         }
                     }
