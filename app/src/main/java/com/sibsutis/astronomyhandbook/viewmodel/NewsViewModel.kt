@@ -43,6 +43,10 @@ class NewsViewModel : ViewModel() {
         _displayedNews.value = _displayedNews.value.map { news ->
             if (news.id == id) news.copy(likes = news.likes + 1) else news
         }
+
+        _newsList.value = _newsList.value.map { news ->
+            if (news.id == id) news.copy(likes = news.likes + 1) else news
+        }
     }
 
     private fun startNewsRotation() {

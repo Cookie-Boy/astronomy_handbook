@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibsutis.astronomyhandbook.ui.screens.NewsScreen
 import com.sibsutis.astronomyhandbook.ui.screens.OpenGLScreen
@@ -31,7 +32,7 @@ class MainActivity : ComponentActivity() {
                     val viewModel: NewsViewModel = viewModel()
 
                     var showOpenGL by remember { mutableStateOf(false) }
-                    val planetNames = listOf("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn")
+                    val planetNames = listOf("Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн")
                     var selectedPlanetIndex by remember { mutableStateOf(0) }
 
                     if (!showOpenGL) {
@@ -73,7 +74,7 @@ class MainActivity : ComponentActivity() {
                                         selectedPlanetIndex = (selectedPlanetIndex - 1 + planetNames.size) % planetNames.size
                                     }
                                 ) {
-                                    Text("←")
+                                    Text(text = "←", fontSize = 24.sp)
                                 }
                                 Button(
                                     onClick = {
@@ -84,14 +85,14 @@ class MainActivity : ComponentActivity() {
                                         ).show()
                                     }
                                 ) {
-                                    Text("i")
+                                    Text(text = "Info", fontSize = 24.sp)
                                 }
                                 Button(
                                     onClick = {
                                         selectedPlanetIndex = (selectedPlanetIndex + 1) % planetNames.size
                                     }
                                 ) {
-                                    Text("→")
+                                    Text(text = "→", fontSize = 24.sp);
                                 }
                             }
 

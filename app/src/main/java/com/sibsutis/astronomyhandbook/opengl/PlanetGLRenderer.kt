@@ -52,7 +52,7 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         sphere = Sphere(1.0f)
         selectionCube = TransparentCube()
 
-        textureBackground = loadTexture(gl, R.drawable.galaxy_background)
+        textureBackground = loadTexture(gl, R.drawable.dark_galaxy)
 
 
         // Настройки OpenGL
