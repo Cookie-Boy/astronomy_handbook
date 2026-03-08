@@ -1,8 +1,9 @@
-package com.sibsutis.astronomyhandbook.opengl
+package com.sibsutis.astronomyhandbook.opengl.obj
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.nio.ShortBuffer
 import javax.microedition.khronos.opengles.GL10
 
 class Cube {
@@ -85,7 +86,7 @@ class Cube {
 
     private val vertexBuffer: FloatBuffer
     private val textureBuffer: FloatBuffer
-    private val indexBuffer: java.nio.ShortBuffer
+    private val indexBuffer: ShortBuffer
 
     init {
         // Вершинный буфер

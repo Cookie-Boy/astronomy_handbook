@@ -14,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sibsutis.astronomyhandbook.ui.screens.MoonDetailScreen
 import com.sibsutis.astronomyhandbook.ui.screens.NewsScreen
 import com.sibsutis.astronomyhandbook.ui.screens.OpenGLScreen
 import com.sibsutis.astronomyhandbook.ui.theme.AstronomyHandbookTheme
@@ -30,12 +31,31 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val viewModel: NewsViewModel = viewModel()
-
                     var showOpenGL by remember { mutableStateOf(false) }
-                    val planetNames = listOf("Меркурий", "Венера", "Земля", "Марс", "Юпитер", "Сатурн")
-                    var selectedPlanetIndex by remember { mutableStateOf(0) }
+                    var showMoonDetail by remember { mutableStateOf(false) }
 
-                    if (!showOpenGL) {
+                    val objectNames = listOf("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Moon")
+
+                    var selectedObjectIndex by remember { mutableStateOf(0) }
+
+                    if (showMoonDetail) {
+                        // Экран детализации Луны
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            MoonDetailScreen()
+                            IconButton(
+                                onClick = { showMoonDetail = false },
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.left_arrow_icon),
+                                    contentDescription = "Назад",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        }
+                    } else if (!showOpenGL) {
                         Column(
                             modifier = Modifier.fillMaxSize()
                         ) {
@@ -59,7 +79,7 @@ class MainActivity : ComponentActivity() {
                         }
                     } else {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            OpenGLScreen(selectedPlanetIndex = selectedPlanetIndex)
+                            OpenGLScreen(selectedObjectIndex  = selectedObjectIndex)
 
                             // Нижняя панель с кнопками
                             Row(
@@ -71,25 +91,30 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 Button(
                                     onClick = {
-                                        selectedPlanetIndex = (selectedPlanetIndex - 1 + planetNames.size) % planetNames.size
+                                        selectedObjectIndex = (selectedObjectIndex  - 1 + objectNames.size) % objectNames.size
                                     }
                                 ) {
                                     Text(text = "←", fontSize = 24.sp)
                                 }
                                 Button(
                                     onClick = {
-                                        Toast.makeText(
-                                            this@MainActivity,
-                                            "Выбрана планета: ${planetNames[selectedPlanetIndex]}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        val currentName = objectNames[selectedObjectIndex]
+                                        if (currentName == "Moon") {
+                                            showMoonDetail = true
+                                        } else {
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "Выбрана планета: $currentName",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
                                 ) {
                                     Text(text = "Info", fontSize = 24.sp)
                                 }
                                 Button(
                                     onClick = {
-                                        selectedPlanetIndex = (selectedPlanetIndex + 1) % planetNames.size
+                                        selectedObjectIndex = (selectedObjectIndex + 1) % objectNames.size
                                     }
                                 ) {
                                     Text(text = "→", fontSize = 24.sp);

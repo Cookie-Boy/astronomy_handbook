@@ -1,10 +1,12 @@
-package com.sibsutis.astronomyhandbook.opengl
+package com.sibsutis.astronomyhandbook.opengl.obj
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.cos
+import kotlin.math.sin
 
 class Sphere(radius: Float, private val slices: Int = 24, private val stacks: Int = 12) {
     private val vertexBuffer: FloatBuffer
@@ -22,13 +24,13 @@ class Sphere(radius: Float, private val slices: Int = 24, private val stacks: In
 
         for (i in 0..stacks) {
             val phi = -Math.PI.toFloat() / 2 + i * phiStep
-            val sinPhi = kotlin.math.sin(phi)
-            val cosPhi = kotlin.math.cos(phi)
+            val sinPhi = sin(phi)
+            val cosPhi = cos(phi)
 
             for (j in 0..slices) {
                 val theta = j * thetaStep
-                val sinTheta = kotlin.math.sin(theta)
-                val cosTheta = kotlin.math.cos(theta)
+                val sinTheta = sin(theta)
+                val cosTheta = cos(theta)
 
                 val x = cosPhi * cosTheta
                 val y = sinPhi

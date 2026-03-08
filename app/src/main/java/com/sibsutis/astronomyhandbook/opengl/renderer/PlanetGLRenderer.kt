@@ -1,11 +1,15 @@
-package com.sibsutis.astronomyhandbook.opengl
+package com.sibsutis.astronomyhandbook.opengl.renderer
 
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
-import android.util.Log
 import com.sibsutis.astronomyhandbook.R
+import com.sibsutis.astronomyhandbook.opengl.obj.Sphere
+import com.sibsutis.astronomyhandbook.opengl.obj.Square
+import com.sibsutis.astronomyhandbook.opengl.obj.TransparentCube
+import com.sibsutis.astronomyhandbook.opengl.model.Planet
+import com.sibsutis.astronomyhandbook.opengl.model.SelectableObject
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.cos
@@ -18,32 +22,29 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private var textureBackground = -1
 
     private lateinit var selectionCube: TransparentCube
-    private var selectedPlanetIndex = 0
-
-    private data class Planet(
-        val name: String,
-        val radius: Float,
-        val orbitRadius: Float,
-        val speed: Float,
-        val color: FloatArray,
-        var angle: Float = 0f
-    )
 
     private val planets = listOf(
         Planet("Mercury", 0.15f, 1.5f, 0.02f, floatArrayOf(0.8f, 0.8f, 0.8f, 1f)),
-        Planet("Venus",   0.18f, 2.2f, 0.015f, floatArrayOf(1f, 0.8f, 0.5f, 1f)),
-        Planet("Earth",   0.2f,  2.9f, 0.01f, floatArrayOf(0.2f, 0.5f, 1f, 1f)),
-        Planet("Mars",    0.16f, 3.6f, 0.008f, floatArrayOf(1f, 0.3f, 0.2f, 1f)),
+        Planet("Venus", 0.18f, 2.2f, 0.015f, floatArrayOf(1f, 0.8f, 0.5f, 1f)),
+        Planet("Earth", 0.2f, 2.9f, 0.01f, floatArrayOf(0.2f, 0.5f, 1f, 1f)),
+        Planet("Mars", 0.16f, 3.6f, 0.008f, floatArrayOf(1f, 0.3f, 0.2f, 1f)),
         Planet("Jupiter", 0.35f, 4.5f, 0.005f, floatArrayOf(0.9f, 0.7f, 0.5f, 1f)),
-        Planet("Saturn",  0.3f,  5.2f, 0.004f, floatArrayOf(0.9f, 0.8f, 0.6f, 1f))
+        Planet("Saturn", 0.3f, 5.2f, 0.004f, floatArrayOf(0.9f, 0.8f, 0.6f, 1f))
     )
 
     private var moonAngle = 0f
     private val moonSpeed = 0.05f
     private val moonOrbitRadius = 0.6f
+    private val moonRadius = 0.1f
 
-    fun setSelectedPlanetIndex(index: Int) {
-        selectedPlanetIndex = index
+    private var lastMoonX = 0f
+    private var lastMoonY = 0f
+    private var lastMoonZ = 0f
+
+    private var selectedObjectIndex = 0
+
+    fun setSelectedObjectIndex(index: Int) {
+        selectedObjectIndex = index
     }
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
@@ -52,7 +53,6 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         selectionCube = TransparentCube()
 
         textureBackground = loadTexture(gl, R.drawable.dark_galaxy)
-
 
         // Настройки OpenGL
         gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -93,7 +93,7 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         gl.glBindTexture(GL10.GL_TEXTURE_2D, textureBackground)
         square.draw(gl)
 
-        // --- Включаем освещение для небесных тел ---
+        // Включаем освещение для планет
         gl.glEnable(GL10.GL_LIGHTING)
         val lightPos = floatArrayOf(0f, 0f, -6f, 1f)  // Солнце будет в (0,0,-6)
         gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, lightPos, 0)
@@ -108,19 +108,18 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
         gl.glScalef(0.8f, 0.8f, 0.8f)
         sphere.draw(gl)
         gl.glPopMatrix()
-
         val noEmission = floatArrayOf(0f, 0f, 0f, 1f)
         gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_EMISSION, noEmission, 0)
 
-        var selectedX = 0f
-        var selectedY = 0f
-        var selectedRadius = 0f
+        val selectableObjects = mutableListOf<SelectableObject>()
 
         // Планеты
         for ((index, planet) in planets.withIndex()) {
             planet.angle += planet.speed
             val x = planet.orbitRadius * cos(planet.angle)
             val y = planet.orbitRadius * sin(planet.angle)
+
+            // Draw the planet
             gl.glPushMatrix()
             gl.glTranslatef(x, y, 0f)
             gl.glColor4f(planet.color[0], planet.color[1], planet.color[2], planet.color[3])
@@ -128,38 +127,45 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
             sphere.draw(gl)
             gl.glPopMatrix()
 
+            selectableObjects.add(SelectableObject(planet.name, x, y, 0f, planet.radius))
+
             if (planet.name == "Earth") {
                 moonAngle += moonSpeed
                 val moonX = moonOrbitRadius * cos(moonAngle)
                 val moonZ = moonOrbitRadius * sin(moonAngle)
+                val absMoonX = x + moonX
+                val absMoonY = y
+                val absMoonZ = moonZ
+
                 gl.glPushMatrix()
-                gl.glTranslatef(x + moonX, y, moonZ)
+                gl.glTranslatef(absMoonX, absMoonY, absMoonZ)
                 gl.glColor4f(0.8f, 0.8f, 0.8f, 1f)
-                gl.glScalef(0.1f, 0.1f, 0.1f)
+                gl.glScalef(moonRadius, moonRadius, moonRadius)
                 sphere.draw(gl)
                 gl.glPopMatrix()
-            }
 
-            if (index == selectedPlanetIndex) {
-                selectedX = x
-                selectedY = y
-                selectedRadius = planet.radius
+                lastMoonX = absMoonX
+                lastMoonY = absMoonY
+                lastMoonZ = absMoonZ
             }
         }
 
-        if (selectedPlanetIndex in planets.indices) {
+        selectableObjects.add(SelectableObject("Moon", lastMoonX, lastMoonY, lastMoonZ, moonRadius))
+
+        if (selectedObjectIndex in selectableObjects.indices) {
+            val obj = selectableObjects[selectedObjectIndex]
             gl.glDisable(GL10.GL_LIGHTING)
             gl.glEnable(GL10.GL_BLEND)
             gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA)
             gl.glDisable(GL10.GL_TEXTURE_2D)
 
-            gl.glColor4f(1f, 1f, 1f, 0.3f)
+            gl.glColor4f(1f, 1f, 1f, 0.3f)  // белый полупрозрачный
 
             gl.glPushMatrix()
             gl.glLoadIdentity()
             gl.glTranslatef(0f, 0f, -6f)       // центр системы
-            gl.glTranslatef(selectedX, selectedY, 0f) // позиция планеты
-            gl.glScalef(selectedRadius * 1.2f, selectedRadius * 1.2f, selectedRadius * 1.2f)
+            gl.glTranslatef(obj.x, obj.y, obj.z) // позиция объекта
+            gl.glScalef(obj.radius * 1.2f, obj.radius * 1.2f, obj.radius * 1.2f)
             selectionCube.draw(gl)
             gl.glPopMatrix()
 

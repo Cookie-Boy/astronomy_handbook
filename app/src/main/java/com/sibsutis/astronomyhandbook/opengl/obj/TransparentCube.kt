@@ -1,4 +1,4 @@
-package com.sibsutis.astronomyhandbook.opengl
+package com.sibsutis.astronomyhandbook.opengl.obj
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

@@ -10,10 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.sibsutis.astronomyhandbook.opengl.PlanetGLRenderer
+import com.sibsutis.astronomyhandbook.opengl.renderer.PlanetGLRenderer
 
 @Composable
-fun OpenGLScreen(selectedPlanetIndex: Int) {
+fun OpenGLScreen(selectedObjectIndex: Int) {
     val context = LocalContext.current
     val rendererRef = remember { mutableStateOf<PlanetGLRenderer?>(null) }
     AndroidView(
@@ -30,7 +30,7 @@ fun OpenGLScreen(selectedPlanetIndex: Int) {
         modifier = Modifier.fillMaxSize().clipToBounds()
     )
 
-    LaunchedEffect(selectedPlanetIndex) {
-        rendererRef.value?.setSelectedPlanetIndex(selectedPlanetIndex)
+    LaunchedEffect(selectedObjectIndex) {
+        rendererRef.value?.setSelectedObjectIndex(selectedObjectIndex)
     }
 }

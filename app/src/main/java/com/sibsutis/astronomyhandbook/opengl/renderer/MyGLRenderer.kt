@@ -1,14 +1,17 @@
-package com.sibsutis.astronomyhandbook.opengl
+package com.sibsutis.astronomyhandbook.opengl.renderer
 
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.opengl.GLES20
+import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import com.sibsutis.astronomyhandbook.R
+import com.sibsutis.astronomyhandbook.opengl.obj.Cube
+import com.sibsutis.astronomyhandbook.opengl.obj.Square
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class MyGLRenderer(private val context: Context) : android.opengl.GLSurfaceView.Renderer {
+class MyGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     private lateinit var square: Square
     private lateinit var cube: Cube
