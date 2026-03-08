@@ -47,7 +47,6 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        Log.d("MyGLRenderer", "onSurfaceCreated")
         square = Square()
         sphere = Sphere(1.0f)
         selectionCube = TransparentCube()
@@ -154,13 +153,12 @@ class PlanetGLRenderer(private val context: Context) : GLSurfaceView.Renderer {
             gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA)
             gl.glDisable(GL10.GL_TEXTURE_2D)
 
-            gl.glColor4f(1f, 1f, 1f, 0.3f)  // белый полупрозрачный
+            gl.glColor4f(1f, 1f, 1f, 0.3f)
 
             gl.glPushMatrix()
             gl.glLoadIdentity()
             gl.glTranslatef(0f, 0f, -6f)       // центр системы
             gl.glTranslatef(selectedX, selectedY, 0f) // позиция планеты
-            // Масштабируем куб так, чтобы он был чуть больше планеты
             gl.glScalef(selectedRadius * 1.2f, selectedRadius * 1.2f, selectedRadius * 1.2f)
             selectionCube.draw(gl)
             gl.glPopMatrix()

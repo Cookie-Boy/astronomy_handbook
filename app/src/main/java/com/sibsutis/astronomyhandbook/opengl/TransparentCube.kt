@@ -7,19 +7,17 @@ import java.nio.ShortBuffer
 import javax.microedition.khronos.opengles.GL10
 
 class TransparentCube {
-    // Вершины куба (8 вершин)
     private val cubeCoords = floatArrayOf(
-        -1f, -1f, -1f,   // 0
-        1f, -1f, -1f,   // 1
-        1f,  1f, -1f,   // 2
-        -1f,  1f, -1f,   // 3
-        -1f, -1f,  1f,   // 4
-        1f, -1f,  1f,   // 5
-        1f,  1f,  1f,   // 6
-        -1f,  1f,  1f    // 7
+        -1f, -1f, -1f,
+        1f, -1f, -1f,
+        1f,  1f, -1f,
+        -1f,  1f, -1f,
+        -1f, -1f,  1f,
+        1f, -1f,  1f,
+        1f,  1f,  1f,
+        -1f,  1f,  1f
     )
 
-    // Индексы для 12 треугольников
     private val indices = shortArrayOf(
         // Передняя
         0, 1, 2, 0, 2, 3,
