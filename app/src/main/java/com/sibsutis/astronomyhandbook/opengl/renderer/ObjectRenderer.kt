@@ -5,21 +5,31 @@ import android.graphics.BitmapFactory
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import com.sibsutis.astronomyhandbook.R
+import com.sibsutis.astronomyhandbook.data.PlanetDescriptions
 import com.sibsutis.astronomyhandbook.opengl.obj.Sphere
+import com.sibsutis.astronomyhandbook.opengl.obj.Square
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class MoonRenderer(private val context: Context) : GLSurfaceView.Renderer {
+class ObjectRenderer(
+    private val context: Context,
+    private val objectName: String
+) : GLSurfaceView.Renderer {
 
     private lateinit var sphere: Sphere
-    private var moonTexture = -1
+    private lateinit var square: Square
+    private var textureBackground = -1
+    private var textureId = -1
     private var rotationAngle = 0f
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        sphere = Sphere(1.0f)
+        square = Square()
+        sphere = Sphere(1.0f, true)
 
-        // Загружаем текстуру Луны
-        moonTexture = loadTexture(gl, R.drawable.moon)
+        textureBackground = loadTexture(gl, R.drawable.dark_galaxy)
+
+        val planetData = PlanetDescriptions.getPlanetData(objectName)
+        textureId = planetData?.textureResId?.let { loadTexture(gl, it) } ?: -1
 
         // Настройки
         gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -27,14 +37,13 @@ class MoonRenderer(private val context: Context) : GLSurfaceView.Renderer {
         gl.glDepthFunc(GL10.GL_LEQUAL)
         gl.glEnable(GL10.GL_TEXTURE_2D)
 
-        // Включаем освещение (модель Фонга)
+        // Освещение по Фонгу
         gl.glEnable(GL10.GL_LIGHTING)
         gl.glEnable(GL10.GL_LIGHT0)
 
-        // Параметры света
-        val lightAmbient = floatArrayOf(0.2f, 0.2f, 0.2f, 1f)
-        val lightDiffuse = floatArrayOf(1f, 1f, 1f, 1f)
-        val lightSpecular = floatArrayOf(1f, 1f, 1f, 1f)
+        val lightAmbient = floatArrayOf(0.2f, 0.2f, 0.2f, 1f) // фон
+        val lightDiffuse = floatArrayOf(1f, 1f, 1f, 1f) // отражение света
+        val lightSpecular = floatArrayOf(1f, 1f, 1f, 1f) // блики
         val lightPos = floatArrayOf(5f, 5f, 10f, 1f)
 
         gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_AMBIENT, lightAmbient, 0)
@@ -42,7 +51,6 @@ class MoonRenderer(private val context: Context) : GLSurfaceView.Renderer {
         gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, lightSpecular, 0)
         gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, lightPos, 0)
 
-        // Параметры материала Луны (модель Фонга)
         val matAmbient = floatArrayOf(0.2f, 0.2f, 0.2f, 1f)
         val matDiffuse = floatArrayOf(1f, 1f, 1f, 1f)
         val matSpecular = floatArrayOf(0.5f, 0.5f, 0.5f, 1f)
@@ -65,12 +73,23 @@ class MoonRenderer(private val context: Context) : GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10) {
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT or GL10.GL_DEPTH_BUFFER_BIT)
 
+        // Задний фон
+        gl.glDisable(GL10.GL_LIGHTING)
+        gl.glMatrixMode(GL10.GL_MODELVIEW)
+        gl.glLoadIdentity()
+        gl.glTranslatef(0f, 0f, -20f)
+        gl.glScalef(20f, 20f, 1f)
+        gl.glBindTexture(GL10.GL_TEXTURE_2D, textureBackground)
+        square.draw(gl)
+
         gl.glMatrixMode(GL10.GL_MODELVIEW)
         gl.glLoadIdentity()
         gl.glTranslatef(0f, 0f, -6f)
-        gl.glRotatef(rotationAngle, 0f, 1f, 1f) // медленное вращение
+        gl.glRotatef(rotationAngle, 0f, 1f, 1f)
 
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, moonTexture)
+        if (textureId != -1) {
+            gl.glBindTexture(GL10.GL_TEXTURE_2D, textureId)
+        }
         sphere.draw(gl)
 
         rotationAngle += 0.5f

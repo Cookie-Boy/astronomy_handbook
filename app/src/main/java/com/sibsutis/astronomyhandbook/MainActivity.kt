@@ -1,7 +1,6 @@
 package com.sibsutis.astronomyhandbook
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -9,14 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sibsutis.astronomyhandbook.ui.screens.MoonDetailScreen
 import com.sibsutis.astronomyhandbook.ui.screens.NewsScreen
 import com.sibsutis.astronomyhandbook.ui.screens.OpenGLScreen
+import com.sibsutis.astronomyhandbook.ui.screens.PlanetDetailScreen
 import com.sibsutis.astronomyhandbook.ui.theme.AstronomyHandbookTheme
 import com.sibsutis.astronomyhandbook.viewmodel.NewsViewModel
 
@@ -32,29 +30,18 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val viewModel: NewsViewModel = viewModel()
                     var showOpenGL by remember { mutableStateOf(false) }
-                    var showMoonDetail by remember { mutableStateOf(false) }
+                    var showPlanetDetail by remember { mutableStateOf(false) }
+                    var selectedDetailObjectName by remember { mutableStateOf("") }
 
                     val objectNames = listOf("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Moon")
 
                     var selectedObjectIndex by remember { mutableStateOf(0) }
 
-                    if (showMoonDetail) {
-                        // Экран детализации Луны
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            MoonDetailScreen()
-                            IconButton(
-                                onClick = { showMoonDetail = false },
-                                modifier = Modifier
-                                    .align(Alignment.TopStart)
-                                    .padding(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.left_arrow_icon),
-                                    contentDescription = "Назад",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        }
+                    if (showPlanetDetail) {
+                        PlanetDetailScreen(
+                            objectName = selectedDetailObjectName,
+                            onBackPressed = { showPlanetDetail = false }
+                        )
                     } else if (!showOpenGL) {
                         Column(
                             modifier = Modifier.fillMaxSize()
@@ -99,15 +86,8 @@ class MainActivity : ComponentActivity() {
                                 Button(
                                     onClick = {
                                         val currentName = objectNames[selectedObjectIndex]
-                                        if (currentName == "Moon") {
-                                            showMoonDetail = true
-                                        } else {
-                                            Toast.makeText(
-                                                this@MainActivity,
-                                                "Выбрана планета: $currentName",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
+                                        selectedDetailObjectName = currentName
+                                        showPlanetDetail = true
                                     }
                                 ) {
                                     Text(text = "Info", fontSize = 24.sp)
