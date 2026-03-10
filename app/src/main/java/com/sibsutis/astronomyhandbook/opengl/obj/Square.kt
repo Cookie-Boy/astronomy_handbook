@@ -1,70 +1,75 @@
+// Square.kt
 package com.sibsutis.astronomyhandbook.opengl.obj
 
+import android.opengl.GLES20
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
-import javax.microedition.khronos.opengles.GL10
 
 class Square {
-    private val squareCoords = floatArrayOf(
-        -1.0f,  1.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        1.0f,  1.0f, 0.0f
-    )
-
-    private val textureCoords = floatArrayOf(
-        0.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, 1.0f,
-        1.0f, 0.0f
-    )
-
-    private val drawOrder = shortArrayOf(0, 1, 2, 0, 2, 3)
-
-    private val vertexBuffer: FloatBuffer
-    private val textureBuffer: FloatBuffer
-    private val indexBuffer: ShortBuffer
+    private var vertexBuffer: FloatBuffer? = null
+    private var texCoordBuffer: FloatBuffer? = null
+    private var indexBuffer: ShortBuffer? = null
+    private val indexCount: Int = 6
 
     init {
-        // Инициализация буфера вершин
-        val bb = ByteBuffer.allocateDirect(squareCoords.size * 4)
-        bb.order(ByteOrder.nativeOrder())
-        vertexBuffer = bb.asFloatBuffer()
-        vertexBuffer.put(squareCoords)
-        vertexBuffer.position(0)
+        val vertices = floatArrayOf(
+            -1f, -1f, 0f,
+            1f, -1f, 0f,
+            -1f,  1f, 0f,
+            1f,  1f, 0f
+        )
+        val texCoords = floatArrayOf(
+            0f, 1f,
+            1f, 1f,
+            0f, 0f,
+            1f, 0f
+        )
+        val indices = shortArrayOf(0, 1, 2, 1, 3, 2)
 
-        // Буфер текстурных координат
-        val tb = ByteBuffer.allocateDirect(textureCoords.size * 4)
-        tb.order(ByteOrder.nativeOrder())
-        textureBuffer = tb.asFloatBuffer()
-        textureBuffer.put(textureCoords)
-        textureBuffer.position(0)
-
-        // Буфер индексов
-        val ib = ByteBuffer.allocateDirect(drawOrder.size * 2)
-        ib.order(ByteOrder.nativeOrder())
-        indexBuffer = ib.asShortBuffer()
-        indexBuffer.put(drawOrder)
-        indexBuffer.position(0)
+        vertexBuffer = createFloatBuffer(vertices)
+        texCoordBuffer = createFloatBuffer(texCoords)
+        indexBuffer = createShortBuffer(indices)
     }
 
-    fun draw(gl: GL10) {
-        gl.glFrontFace(GL10.GL_CCW)
-        gl.glEnable(GL10.GL_CULL_FACE)
-        gl.glCullFace(GL10.GL_BACK)
+    private fun createFloatBuffer(array: FloatArray): FloatBuffer {
+        val buffer = ByteBuffer.allocateDirect(array.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+        buffer.put(array)
+        buffer.position(0)
+        return buffer
+    }
 
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY)
+    private fun createShortBuffer(array: ShortArray): ShortBuffer {
+        val buffer = ByteBuffer.allocateDirect(array.size * 2)
+            .order(ByteOrder.nativeOrder())
+            .asShortBuffer()
+        buffer.put(array)
+        buffer.position(0)
+        return buffer
+    }
 
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertexBuffer)
-        gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, textureBuffer)
+    fun draw(shader: com.sibsutis.astronomyhandbook.opengl.shaders.BackgroundShader) {
+        val posAttrib = shader.getPositionAttrib()
+        val texAttrib = shader.getTexCoordAttrib()
 
-        gl.glDrawElements(GL10.GL_TRIANGLES, drawOrder.size, GL10.GL_UNSIGNED_SHORT, indexBuffer)
+        vertexBuffer?.let {
+            GLES20.glEnableVertexAttribArray(posAttrib)
+            GLES20.glVertexAttribPointer(posAttrib, 3, GLES20.GL_FLOAT, false, 0, it)
+        }
 
-        gl.glDisableClientState(GL10.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY)
-        gl.glDisable(GL10.GL_CULL_FACE)
+        texCoordBuffer?.let {
+            GLES20.glEnableVertexAttribArray(texAttrib)
+            GLES20.glVertexAttribPointer(texAttrib, 2, GLES20.GL_FLOAT, false, 0, it)
+        }
+
+        indexBuffer?.let {
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, indexCount, GLES20.GL_UNSIGNED_SHORT, it)
+        }
+
+        GLES20.glDisableVertexAttribArray(posAttrib)
+        GLES20.glDisableVertexAttribArray(texAttrib)
     }
 }

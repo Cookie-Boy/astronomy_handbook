@@ -1,125 +1,104 @@
 package com.sibsutis.astronomyhandbook.opengl.obj
 
+import android.opengl.GLES20
+import com.sibsutis.astronomyhandbook.opengl.shaders.TexturedShader
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import java.nio.ShortBuffer
-import javax.microedition.khronos.opengles.GL10
+import kotlin.math.*
 
-class Sphere(radius: Float,
-             val hasTexture: Boolean = false,
-             private val slices: Int = 24,
-             private val stacks: Int = 12) {
-
-    private val vertexBuffer: FloatBuffer
-    private val normalBuffer: FloatBuffer
-    private val texCoordBuffer: FloatBuffer?
-    private val indexBuffer: ShortBuffer
-    private val numIndices: Int
+class Sphere(private val radius: Float, private val stacks: Int = 36, private val slices: Int = 36) {
+    private var vertexBuffer: FloatBuffer? = null
+    private var normalBuffer: FloatBuffer? = null
+    private var texCoordBuffer: FloatBuffer? = null
+    private var indexCount: Int = 0
 
     init {
-        val vertices = mutableListOf<Float>()
-        val normals = mutableListOf<Float>()
-        val indices = mutableListOf<Short>()
-
-        val phiStep = Math.PI.toFloat() / stacks
-        val thetaStep = 2 * Math.PI.toFloat() / slices
-
-        for (i in 0..stacks) {
-            val phi = -Math.PI.toFloat() / 2 + i * phiStep
-            val sinPhi = kotlin.math.sin(phi)
-            val cosPhi = kotlin.math.cos(phi)
-
-            for (j in 0..slices) {
-                val theta = j * thetaStep
-                val sinTheta = kotlin.math.sin(theta)
-                val cosTheta = kotlin.math.cos(theta)
-
-                val x = cosPhi * cosTheta
-                val y = sinPhi
-                val z = cosPhi * sinTheta
-
-                vertices.add(x * radius)
-                vertices.add(y * radius)
-                vertices.add(z * radius)
-
-                normals.add(x)
-                normals.add(y)
-                normals.add(z)
-            }
-        }
-
-        texCoordBuffer = if (hasTexture) {
-            val texCoords = mutableListOf<Float>()
-            for (i in 0..stacks) {
-                for (j in 0..slices) {
-                    texCoords.add(j.toFloat() / slices)
-                    texCoords.add(i.toFloat() / stacks)
-                }
-            }
-            ByteBuffer.allocateDirect(texCoords.size * 4)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-                .apply { put(texCoords.toFloatArray()); position(0) }
-        } else {
-            null
-        }
-
-        for (i in 0 until stacks) {
-            for (j in 0 until slices) {
-                val first = (i * (slices + 1) + j).toShort()
-                val second = (i * (slices + 1) + j + 1).toShort()
-                val third = ((i + 1) * (slices + 1) + j).toShort()
-                val fourth = ((i + 1) * (slices + 1) + j + 1).toShort()
-
-                indices.add(first)
-                indices.add(second)
-                indices.add(third)
-                indices.add(second)
-                indices.add(fourth)
-                indices.add(third)
-            }
-        }
-
-        numIndices = indices.size
-
-        vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .apply { put(vertices.toFloatArray()); position(0) }
-
-        normalBuffer = ByteBuffer.allocateDirect(normals.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .apply { put(normals.toFloatArray()); position(0) }
-
-        indexBuffer = ByteBuffer.allocateDirect(indices.size * 2)
-            .order(ByteOrder.nativeOrder())
-            .asShortBuffer()
-            .apply { put(indices.toShortArray()); position(0) }
+        generateData()
     }
 
-    fun draw(gl: GL10) {
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY)
-        gl.glEnableClientState(GL10.GL_NORMAL_ARRAY)
+    private fun generateData() {
+        val vertices = mutableListOf<Float>()
+        val normals = mutableListOf<Float>()
+        val texCoords = mutableListOf<Float>()
 
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertexBuffer)
-        gl.glNormalPointer(GL10.GL_FLOAT, 0, normalBuffer)
+        val phiStep = PI.toFloat() / stacks
+        val thetaStep = (2 * PI).toFloat() / slices
 
-        if (hasTexture) {
-            gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY)
-            texCoordBuffer?.let {
-                gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, it)
+        for (i in 0 until stacks) {
+            val phi = i * phiStep
+            val nextPhi = (i + 1) * phiStep
+            for (j in 0 until slices) {
+                val theta = j * thetaStep
+                val nextTheta = (j + 1) * thetaStep
+
+                // Треугольник 1
+                addVertex(vertices, normals, texCoords, phi, theta)
+                addVertex(vertices, normals, texCoords, nextPhi, theta)
+                addVertex(vertices, normals, texCoords, phi, nextTheta)
+
+                // Треугольник 2
+                addVertex(vertices, normals, texCoords, nextPhi, theta)
+                addVertex(vertices, normals, texCoords, nextPhi, nextTheta)
+                addVertex(vertices, normals, texCoords, phi, nextTheta)
             }
         }
 
-        gl.glDrawElements(GL10.GL_TRIANGLES, numIndices, GL10.GL_UNSIGNED_SHORT, indexBuffer)
+        indexCount = vertices.size / 3
+        vertexBuffer = createFloatBuffer(vertices.toFloatArray())
+        normalBuffer = createFloatBuffer(normals.toFloatArray())
+        texCoordBuffer = createFloatBuffer(texCoords.toFloatArray())
+    }
 
-        gl.glDisableClientState(GL10.GL_VERTEX_ARRAY)
-        gl.glDisableClientState(GL10.GL_NORMAL_ARRAY)
+    private fun addVertex(vertices: MutableList<Float>, normals: MutableList<Float>,
+                          texCoords: MutableList<Float>, phi: Float, theta: Float) {
+        val x = radius * sin(phi) * cos(theta)
+        val y = radius * cos(phi)
+        val z = radius * sin(phi) * sin(theta)
 
-        if (hasTexture) {
-            gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY)
+        vertices.add(x)
+        vertices.add(y)
+        vertices.add(z)
+
+        normals.add(x / radius)
+        normals.add(y / radius)
+        normals.add(z / radius)
+
+        texCoords.add((theta / (2 * PI)).toFloat())
+        texCoords.add((phi / PI).toFloat())
+    }
+
+    private fun createFloatBuffer(array: FloatArray): FloatBuffer {
+        val buffer = ByteBuffer.allocateDirect(array.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+        buffer.put(array)
+        buffer.position(0)
+        return buffer
+    }
+
+    fun draw(shader: TexturedShader) {
+        val posAttrib = shader.getPositionAttrib()
+        val normAttrib = shader.getNormalAttrib()
+        val texAttrib = shader.getTexCoordAttrib()
+
+        vertexBuffer?.let {
+            GLES20.glEnableVertexAttribArray(posAttrib)
+            GLES20.glVertexAttribPointer(posAttrib, 3, GLES20.GL_FLOAT, false, 0, it)
         }
+        normalBuffer?.let {
+            GLES20.glEnableVertexAttribArray(normAttrib)
+            GLES20.glVertexAttribPointer(normAttrib, 3, GLES20.GL_FLOAT, false, 0, it)
+        }
+        texCoordBuffer?.let {
+            GLES20.glEnableVertexAttribArray(texAttrib)
+            GLES20.glVertexAttribPointer(texAttrib, 2, GLES20.GL_FLOAT, false, 0, it)
+        }
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, indexCount)
+
+        GLES20.glDisableVertexAttribArray(posAttrib)
+        GLES20.glDisableVertexAttribArray(normAttrib)
+        GLES20.glDisableVertexAttribArray(texAttrib)
     }
 }

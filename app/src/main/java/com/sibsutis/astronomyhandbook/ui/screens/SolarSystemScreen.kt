@@ -10,17 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.sibsutis.astronomyhandbook.opengl.renderer.PlanetGLRenderer
+import com.sibsutis.astronomyhandbook.opengl.renderer.SolarSystemRenderer
 
 @Composable
-fun OpenGLScreen(selectedObjectIndex: Int) {
+fun SolarSystemScreen(selectedObjectIndex: Int) {
     val context = LocalContext.current
-    val rendererRef = remember { mutableStateOf<PlanetGLRenderer?>(null) }
+    val rendererRef = remember { mutableStateOf<SolarSystemRenderer?>(null) }
     AndroidView(
         factory = { ctx ->
             GLSurfaceView(ctx).apply {
-                setEGLContextClientVersion(1)
-                val renderer = PlanetGLRenderer(context)
+                setEGLContextClientVersion(2)
+                val renderer = SolarSystemRenderer(context)
                 setRenderer(renderer)
                 renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
                 rendererRef.value = renderer

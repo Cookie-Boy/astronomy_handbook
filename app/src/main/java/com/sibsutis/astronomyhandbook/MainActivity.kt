@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibsutis.astronomyhandbook.ui.screens.NewsScreen
-import com.sibsutis.astronomyhandbook.ui.screens.OpenGLScreen
-import com.sibsutis.astronomyhandbook.ui.screens.PlanetDetailScreen
+import com.sibsutis.astronomyhandbook.ui.screens.SolarSystemScreen
+import com.sibsutis.astronomyhandbook.ui.screens.PlanetScreen
 import com.sibsutis.astronomyhandbook.ui.theme.AstronomyHandbookTheme
 import com.sibsutis.astronomyhandbook.viewmodel.NewsViewModel
 
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                     var selectedObjectIndex by remember { mutableStateOf(0) }
 
                     if (showPlanetDetail) {
-                        PlanetDetailScreen(
+                        PlanetScreen(
                             objectName = selectedDetailObjectName,
                             onBackPressed = { showPlanetDetail = false }
                         )
@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                         }
                     } else {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            OpenGLScreen(selectedObjectIndex  = selectedObjectIndex)
+                            SolarSystemScreen(selectedObjectIndex  = selectedObjectIndex)
 
                             // Нижняя панель с кнопками
                             Row(

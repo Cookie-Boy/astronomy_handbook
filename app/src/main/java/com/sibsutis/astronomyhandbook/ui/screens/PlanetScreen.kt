@@ -17,10 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.sibsutis.astronomyhandbook.R
 import com.sibsutis.astronomyhandbook.data.PlanetDescriptions
-import com.sibsutis.astronomyhandbook.opengl.renderer.ObjectRenderer
+import com.sibsutis.astronomyhandbook.opengl.renderer.PlanetRenderer
 
 @Composable
-fun PlanetDetailScreen(
+fun PlanetScreen(
     objectName: String,
     onBackPressed: () -> Unit
 ) {
@@ -31,8 +31,8 @@ fun PlanetDetailScreen(
         AndroidView(
             factory = { ctx ->
                 GLSurfaceView(ctx).apply {
-                    setEGLContextClientVersion(1)
-                    setRenderer(ObjectRenderer(context, objectName))
+                    setEGLContextClientVersion(2)
+                    setRenderer(PlanetRenderer(context, objectName))
                     renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
                 }
             },
