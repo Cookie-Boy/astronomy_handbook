@@ -20,15 +20,12 @@ class PlanetRenderer(
     private val objectName: String
 ) : GLSurfaceView.Renderer {
 
-    // Геометрические объекты
     private lateinit var sphere: Sphere
     private lateinit var square: Square
 
-    // Шейдеры
     private lateinit var objectShader: ObjectShader
     private lateinit var backgroundShader: BackgroundShader
 
-    // Текстуры
     private var textureBackground = -1
     private var textureId = -1
 
@@ -50,15 +47,12 @@ class PlanetRenderer(
     private var rotationAngle = 0f
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        // Создаём объекты геометрии
-        sphere = Sphere(1.0f) // радиус 1.0, текстурные координаты генерируются внутри
+        sphere = Sphere(1.0f)
         square = Square()
 
-        // Создаём шейдеры
         objectShader = ObjectShader()
         backgroundShader = BackgroundShader()
 
-        // Загружаем текстуры
         textureBackground = loadTexture(R.drawable.dark_galaxy)
 
         val planetData = PlanetDescriptions.getPlanetData(objectName)
@@ -71,7 +65,6 @@ class PlanetRenderer(
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
-        // View матрица – камера в начале координат, смотрит вдоль -Z
         Matrix.setIdentityM(viewMatrix, 0)
     }
 
@@ -131,7 +124,6 @@ class PlanetRenderer(
     }
 
     private fun extractNormalMatrix(normalMat: FloatArray, mvMat: FloatArray) {
-        // Извлекаем 3x3 подматрицу
         normalMat[0] = mvMat[0]
         normalMat[1] = mvMat[1]
         normalMat[2] = mvMat[2]
@@ -141,7 +133,6 @@ class PlanetRenderer(
         normalMat[6] = mvMat[8]
         normalMat[7] = mvMat[9]
         normalMat[8] = mvMat[10]
-        // При равномерном масштабировании можно не инвертировать/транспонировать
     }
 
     private fun loadTexture(resourceId: Int): Int {
