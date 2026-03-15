@@ -46,6 +46,8 @@ class PlanetRenderer(
 
     private var rotationAngle = 0f
 
+    private var startTime = System.currentTimeMillis()
+
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
         sphere = Sphere(1.0f)
         square = Square()
@@ -55,8 +57,12 @@ class PlanetRenderer(
 
         textureBackground = loadTexture(R.drawable.dark_galaxy)
 
-        val planetData = PlanetDescriptions.getPlanetData(objectName)
-        textureId = planetData?.textureResId?.let { loadTexture(it) } ?: -1
+        textureId = if (objectName == "Neptune") {
+            loadTexture(R.drawable.water_512)
+        } else {
+            val planetData = PlanetDescriptions.getPlanetData(objectName)
+            planetData?.textureResId?.let { loadTexture(it) } ?: -1
+        }
 
         // Настройки OpenGL
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
@@ -96,7 +102,9 @@ class PlanetRenderer(
 
         Matrix.setIdentityM(modelMatrix, 0)
         Matrix.translateM(modelMatrix, 0, 0f, 0f, -6f)
-        Matrix.rotateM(modelMatrix, 0, rotationAngle, 0f, 1f, 1f)
+        if (objectName != "Neptune") {
+            Matrix.rotateM(modelMatrix, 0, rotationAngle, 0f, 1f, 1f)
+        }
 
         Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0)
@@ -104,6 +112,10 @@ class PlanetRenderer(
         extractNormalMatrix(normalMatrix, mvMatrix)
 
         Matrix.multiplyMV(lightPosEye, 0, viewMatrix, 0, lightPosWorld, 0)
+
+        val time = if (objectName == "Neptune") {
+            (System.currentTimeMillis() - startTime) / 1000f
+        } else 0f
 
         objectShader.setUniforms(
             mvpMatrix = mvpMatrix, // локальные координаты -> экранные координаты
@@ -115,11 +127,11 @@ class PlanetRenderer(
             specular = specular, // блики
             shininess = shininess, // блеск
             useTexture = textureId != -1,
-            textureId = textureId
+            textureId = textureId,
+            time = time
         )
 
         sphere.draw(objectShader)
-
         rotationAngle += 0.5f
     }
 

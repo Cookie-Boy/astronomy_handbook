@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
                     var showPlanetDetail by remember { mutableStateOf(false) }
                     var selectedDetailObjectName by remember { mutableStateOf("") }
 
-                    val objectNames = listOf("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Moon")
+                    val objectNames = listOf("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Moon")
 
                     var selectedObjectIndex by remember { mutableStateOf(0) }
 

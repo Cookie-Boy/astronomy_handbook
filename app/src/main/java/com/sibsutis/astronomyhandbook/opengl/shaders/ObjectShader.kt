@@ -16,6 +16,7 @@ class ObjectShader : TexturedShader {
     private var uShininess: Int = 0
     private var uTexture: Int = 0
     private var uUseTexture: Int = 0
+    private var uTime: Int = 0
 
     // Attribute locations
     private var aPosition: Int = 0
@@ -57,20 +58,22 @@ class ObjectShader : TexturedShader {
                 uniform float uShininess;
                 uniform sampler2D uTexture;
                 uniform bool uUseTexture;
+                uniform float uTime;
+                
                 void main() {
                     vec3 normal = normalize(vNormal);
                     vec3 lightDir = normalize(uLightPos - vPosition);
                     vec3 viewDir = normalize(-vPosition);
                     vec3 reflectDir = reflect(-lightDir, normal);
                     
-                    // Фоновое
+                    // Фоновое освещение
                     vec4 ambient = uAmbient;
                     
-                    // Диффузное
+                    // Диффузное освещение
                     float diff = max(dot(normal, lightDir), 0.0);
                     vec4 diffuse = diff * uDiffuse;
                     
-                    // Блики (зеркальное)
+                    // Зеркальные блики
                     float spec = 0.0;
                     if (diff > 0.0) {
                         spec = pow(max(dot(viewDir, reflectDir), 0.0), uShininess);
@@ -79,12 +82,31 @@ class ObjectShader : TexturedShader {
                     
                     vec4 baseColor = ambient + diffuse + specular;
                     
+                    vec4 finalColor = baseColor;
+                    
                     if (uUseTexture) {
-                        vec4 texColor = texture2D(uTexture, vTexCoord);
-                        gl_FragColor = baseColor * texColor;
+                        vec2 uv = vTexCoord;
+                        if (uTime > 0.001) {
+                            // Скорость движения вниз (положительная – вниз)
+                            float flowSpeed = 0.0;
+                            // Сдвиг текстуры по вертикали для эффекта водопада
+                            uv.y -= uTime * flowSpeed;
+                    
+                            // Параметры волн
+                            float waveSpeed = 5.0;
+                            float frequency = 20.0;
+                            float amplitude = 0.02;
+                    
+                            // Горизонтальные искажения, зависящие от текущей вертикали (с учётом сдвига)
+                            uv.y += sin(uv.x * frequency + uTime * waveSpeed) * amplitude;
+                        }
+                        vec4 texColor = texture2D(uTexture, uv);
+                        finalColor = baseColor * texColor;
                     } else {
-                        gl_FragColor = baseColor;
+                        finalColor = baseColor;
                     }
+                    
+                    gl_FragColor = finalColor;
                 }
             """.trimIndent()
 
@@ -101,6 +123,7 @@ class ObjectShader : TexturedShader {
         uShininess = GLES20.glGetUniformLocation(programId, "uShininess")
         uTexture = GLES20.glGetUniformLocation(programId, "uTexture")
         uUseTexture = GLES20.glGetUniformLocation(programId, "uUseTexture")
+        uTime = GLES20.glGetUniformLocation(programId, "uTime")
 
         aPosition = GLES20.glGetAttribLocation(programId, "aPosition")
         aNormal = GLES20.glGetAttribLocation(programId, "aNormal")
@@ -121,7 +144,8 @@ class ObjectShader : TexturedShader {
         specular: FloatArray,
         shininess: Float,
         useTexture: Boolean,
-        textureId: Int
+        textureId: Int,
+        time: Float = 0f
     ) {
         GLES20.glUniformMatrix4fv(uMVPMatrix, 1, false, mvpMatrix, 0)
         GLES20.glUniformMatrix4fv(uMVMatrix, 1, false, mvMatrix, 0)
@@ -132,6 +156,7 @@ class ObjectShader : TexturedShader {
         GLES20.glUniform4fv(uSpecular, 1, specular, 0)
         GLES20.glUniform1f(uShininess, shininess)
         GLES20.glUniform1i(uUseTexture, if (useTexture) 1 else 0)
+        GLES20.glUniform1f(uTime, time)
         if (useTexture) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)

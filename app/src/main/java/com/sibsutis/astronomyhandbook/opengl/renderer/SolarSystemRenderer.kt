@@ -46,7 +46,9 @@ class SolarSystemRenderer(private val context: Context) : GLSurfaceView.Renderer
         Planet("Earth", 0.55f, 2.9f, 0.01f, floatArrayOf(0.2f, 0.5f, 1f, 1f)),
         Planet("Mars", 0.51f, 3.6f, 0.008f, floatArrayOf(1f, 0.3f, 0.2f, 1f)),
         Planet("Jupiter", 0.7f, 4.5f, 0.005f, floatArrayOf(0.9f, 0.7f, 0.5f, 1f)),
-        Planet("Saturn", 0.65f, 5.2f, 0.004f, floatArrayOf(0.9f, 0.8f, 0.6f, 1f))
+        Planet("Saturn", 0.65f, 5.2f, 0.004f, floatArrayOf(0.9f, 0.8f, 0.6f, 1f)),
+        Planet("Uranus", 0.6f, 5.9f, 0.003f, floatArrayOf(0.6f, 0.8f, 1f, 1f)),
+        Planet("Neptune", 0.6f, 6.6f, 0.0025f, floatArrayOf(0.2f, 0.4f, 1f, 1f))
     )
 
     private var moonAngle = 0f
@@ -97,7 +99,7 @@ class SolarSystemRenderer(private val context: Context) : GLSurfaceView.Renderer
 
         val selectableObjects = mutableListOf<SelectableObject>()
 
-        drawSun(selectableObjects)
+        drawSun()
         drawPlanetsAndMoon(selectableObjects)
         drawSelection(selectableObjects)
     }
@@ -113,7 +115,7 @@ class SolarSystemRenderer(private val context: Context) : GLSurfaceView.Renderer
         square.draw(backgroundShader)
     }
 
-    private fun drawSun(selectableObjects: MutableList<SelectableObject>) {
+    private fun drawSun() {
         planetShader.use()
         Matrix.setIdentityM(modelMatrix, 0)
         Matrix.translateM(modelMatrix, 0, 0f, 0f, -6f)
