@@ -6,6 +6,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
+import android.util.Log
 import com.sibsutis.astronomyhandbook.R
 import com.sibsutis.astronomyhandbook.data.PlanetDescriptions
 import com.sibsutis.astronomyhandbook.opengl.obj.Sphere
@@ -20,6 +21,7 @@ class PlanetRenderer(
     private val objectName: String
 ) : GLSurfaceView.Renderer {
 
+    // Для волн на Нептуне используем более детальную сферу
     private lateinit var sphere: Sphere
     private lateinit var square: Square
 
@@ -45,33 +47,46 @@ class PlanetRenderer(
     private var shininess = 50f
 
     private var rotationAngle = 0f
-
     private var startTime = System.currentTimeMillis()
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        sphere = Sphere(1.0f)
-        square = Square()
+        try {
+            Log.d("PlanetRenderer", "onSurfaceCreated for $objectName")
 
-        objectShader = ObjectShader()
-        backgroundShader = BackgroundShader()
+            sphere = Sphere(1.0f, 36, 36)
+            square = Square()
 
-        textureBackground = loadTexture(R.drawable.dark_galaxy)
+            Log.d("PlanetRenderer", "Sphere and Square created")
 
-        textureId = if (objectName == "Neptune") {
-            loadTexture(R.drawable.water_512)
-        } else {
-            val planetData = PlanetDescriptions.getPlanetData(objectName)
-            planetData?.textureResId?.let { loadTexture(it) } ?: -1
+            objectShader = ObjectShader()
+            backgroundShader = BackgroundShader()
+
+            Log.d("PlanetRenderer", "Shaders created")
+
+            textureBackground = loadTexture(R.drawable.dark_galaxy)
+            Log.d("PlanetRenderer", "Background texture loaded: $textureBackground")
+
+            textureId = if (objectName == "Neptune") {
+                loadTexture(R.drawable.water_512)
+            } else {
+                val planetData = PlanetDescriptions.getPlanetData(objectName)
+                planetData?.textureResId?.let { loadTexture(it) } ?: -1
+            }
+            Log.d("PlanetRenderer", "Planet texture loaded: $textureId")
+
+            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+            GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+            GLES20.glDepthFunc(GLES20.GL_LEQUAL)
+            GLES20.glEnable(GLES20.GL_BLEND)
+            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+
+            Matrix.setIdentityM(viewMatrix, 0)
+
+            Log.d("PlanetRenderer", "onSurfaceCreated completed successfully")
+        } catch (e: Exception) {
+            Log.e("PlanetRenderer", "Error in onSurfaceCreated", e)
+            throw e
         }
-
-        // Настройки OpenGL
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        GLES20.glDepthFunc(GLES20.GL_LEQUAL)
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-
-        Matrix.setIdentityM(viewMatrix, 0)
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
@@ -82,6 +97,7 @@ class PlanetRenderer(
 
     override fun onDrawFrame(gl: GL10) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+
         drawBackground()
         drawPlanet()
     }
@@ -102,6 +118,7 @@ class PlanetRenderer(
 
         Matrix.setIdentityM(modelMatrix, 0)
         Matrix.translateM(modelMatrix, 0, 0f, 0f, -6f)
+        // Для Нептуна отключаем вращение, чтобы волны текли вниз, или можно оставить
         if (objectName != "Neptune") {
             Matrix.rotateM(modelMatrix, 0, rotationAngle, 0f, 1f, 1f)
         }
@@ -118,20 +135,21 @@ class PlanetRenderer(
         } else 0f
 
         objectShader.setUniforms(
-            mvpMatrix = mvpMatrix, // локальные координаты -> экранные координаты
-            mvMatrix = mvMatrix, // локальные координаты -> координаты камеры
-            normalMatrix = normalMatrix, // нормали -> координаты камеры
-            lightPos = lightPosEye, // источник света
-            ambient = ambient, // фоновое освещение
-            diffuse = diffuse, // рассеянное освещение
-            specular = specular, // блики
-            shininess = shininess, // блеск
+            mvpMatrix = mvpMatrix,
+            mvMatrix = mvMatrix,
+            normalMatrix = normalMatrix,
+            lightPos = lightPosEye,
+            ambient = ambient,
+            diffuse = diffuse,
+            specular = specular,
+            shininess = shininess,
             useTexture = textureId != -1,
             textureId = textureId,
             time = time
         )
 
         sphere.draw(objectShader)
+
         rotationAngle += 0.5f
     }
 
@@ -153,16 +171,10 @@ class PlanetRenderer(
         val textureId = textureIds[0]
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
 
-        GLES20.glTexParameterf(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_MIN_FILTER,
-            GLES20.GL_LINEAR.toFloat()
-        )
-        GLES20.glTexParameterf(
-            GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_MAG_FILTER,
-            GLES20.GL_LINEAR.toFloat()
-        )
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT.toFloat())
 
         val bitmap = BitmapFactory.decodeResource(context.resources, resourceId)
             ?: throw RuntimeException("Failed to decode bitmap")
